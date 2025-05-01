@@ -9,7 +9,7 @@ import requests
 from typing import Optional, Dict, Any, List
 
 from mcp.server.fastmcp import FastMCP
-from mcp.server import types
+from mcp import types
 
 load_dotenv()
 
@@ -64,7 +64,7 @@ class WeatherSSEServer:
             handler=self._handle_weather_by_coordinates
         )
 
-    async def _handle_current_weather(self, params: Dict[str, Any]) -> types.ToolResult:
+    async def _handle_current_weather(self, params: Dict[str, Any]) -> types.CallToolResult:
         city = params.get("city", "")
         units = params.get("units", "metric")
 
@@ -83,7 +83,7 @@ class WeatherSSEServer:
 
             result = self._format_current_weather(weather_data, units)
 
-            return types.ToolResult(
+            return types.CallToolResult(
                 content=[
                     types.TextContent(
                         type="text",
@@ -93,7 +93,7 @@ class WeatherSSEServer:
             )
         except requests.exceptions.RequestExceptions as e:
             logger.error(f"Error fetching weather data: {str(e)}")
-            return types.ToolResult(
+            return types.CallToolResult(
                 content=[
                     types.TextContent(
                         type="text",
@@ -122,7 +122,7 @@ class WeatherSSEServer:
 
             result = self._format_forecast(forecast_data, days, units)
 
-            return types.ToolResult(
+            return types.CallToolResult(
                 content=[
                     types.TextContent(
                         type="text",
