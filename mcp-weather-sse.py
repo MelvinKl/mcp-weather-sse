@@ -9,6 +9,8 @@ import requests
 from typing import Optional, Dict, Any, List
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.tools.base import Tool
+from mcp.server.fastmcp.utilities.func_metadata import FuncMetadata, ArgModelBase
 from mcp import types
 
 load_dotenv()
@@ -23,6 +25,20 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 3001
 OPENWEATHER_API_BASE_URL = "https://api.openweathermap.org/data/2.5"
 
+class GetCurrentWeatherArgumentsModel(ArgModelBase):
+    city: str
+    units:str
+
+class GetCurrentWeatherForecastArgumentsModel(ArgModelBase):
+    city: str
+    days: int
+    units:str    
+
+class GetCurrentWeatherByCoordinatesArgumentsModel(ArgModelBase):
+    latitude: float
+    longitude: float
+    units:str
+
 class WeatherSSEServer:
     """MCP Server that connects to OpenWeatherMap API through SSE."""
 
@@ -30,38 +46,30 @@ class WeatherSSEServer:
         self.api_key = api_key
         self.port = port
         self.host = host
-        self.server = FastMCP("Weather SSE Server", version="1.0.0")
+        self.server = FastMCP("Weather SSE Server", version="1.0.0", host=host, port=port)
 
         self._register_tools()
 
     def _register_tools(self):
-        self.server.tool(
-            name="get_current_weather",
-            parameters={
-                "city": {"type": "string", "description": "City name (e.g., 'London', 'NewYork')"},
-                "units": {"type": "string", "description": "Units of measurement", "enum": ["metric", "imperial"]},
-            },
-            handler=self._handle_current_weather
+        self.server.add_tool(            
+                name="get_current_weather",
+                fn=self._handle_current_weather,
+                description="Returns the current weather in the given city.",
+        )        
+        self.server.add_tool(            
+            name="get_current_weather",        
+            fn=self._handle_current_weather,
+            description="Returns the current weather in the given city.",            
         )
-
-        self.server.tool(
-            name="get_weather_forecast",
-            parameters={
-                "city": {"type": "string", "description": "City name (e.g., 'London', 'NewYork')"},
-                "days": {"type": "integer", "description": "Number of days (1-5)", "minimum": 1, "maximum": 5, "default": 3},
-                "units": {"type": "string", "description": "Units of measurement", "enum": ["metric", "imperial"]},
-            },
-            handler=self._handle_weather_forecast
+        self.server.add_tool(         
+            name="get_weather_forecast",                
+            fn=self._handle_weather_forecast,                
+            description="Returns the weather forecast at the given city.",
         )
-
-        self.server.tool(
-            name="get_weather_by_coordinates",
-            parameters={
-                "latitude": {"type": "number", "description": "Latitude of the location"},
-                "longitude": {"type": "number", "description": "Longitude of the location"},
-                "units": {"type": "string", "description": "Units of measurement", "enum": ["metric", "imperial"]},
-            },
-            handler=self._handle_weather_by_coordinates
+        self.server.add_tool(        
+            name="get_weather_by_coordinates",         
+            fn=self._handle_weather_by_coordinates,
+            description="Returns the current weather at the given coordinates.",                
         )
 
     async def _handle_current_weather(self, params: Dict[str, Any]) -> types.CallToolResult:
@@ -300,9 +308,9 @@ class WeatherSSEServer:
         index = round(degrees / (360 / len(directions))) % len(directions)
         return directions[index]
 
-    async def start(self):
+    def start(self):
         logger.info(f"Starting MCP Weather SSE Server on {self.host}:{self.port}")
-        await self.server.start(host=self.host, port=self.port)
+        self.server.run(transport="sse")
 
 def parse_args():
     parser = argparse.ArgumentParser(description="MCP Weather SSE Server")
@@ -321,21 +329,21 @@ def parse_args():
     parser.add_argument(
         "--api-key",
         type=str,
-        required=True,
+        required=False,
         help="OpenWeatherMap API key"
     )
     return parser.parse_args()
 
-async def main():
+def main():
     args = parse_args()
-    api_key = os.environ.get("OPENWEATHER_API_KEY")
+    api_key = args.api_key if args.api_key else os.environ.get("OPENWEATHER_API_KEY") 
 
     if not api_key:
         logger.error("API key is required. Please provide it using --api-key or set the OPENWEATHER_API_KEY environment variable.")
         sys.exit(1)
 
     server = WeatherSSEServer(api_key=api_key, port=args.port, host=args.host)
-    await server.start()
+    server.start()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
