@@ -102,7 +102,7 @@ class WeatherSSEServer:
                 ]
             )
         
-    async def _handle_weather_forecast(self, params: Dict[str, Any]) -> types.ToolResult:
+    async def _handle_weather_forecast(self, params: Dict[str, Any]) -> types.CallToolResult:
         city = params.get("city", "")
         days = params.get("days", 3)
         units = params.get("units", "metric")
@@ -132,7 +132,7 @@ class WeatherSSEServer:
             )
         except requests.exceptions.RequestException as e:
             logger.error(f"Error fetching forecast data: {str(e)}")
-            return types.ToolResult(
+            return types.CallToolResult(
                 content=[
                     types.TextContent(
                         type="text",
@@ -141,7 +141,7 @@ class WeatherSSEServer:
                 ]
             )
         
-    async def _handle_weather_by_coordinates(self, params: Dict[str, Any]) -> types.ToolResult:
+    async def _handle_weather_by_coordinates(self, params: Dict[str, Any]) -> types.CallToolResult:
         latitude = params.get("latitude", 0.0)
         longitude = params.get("longitude", 0.0)
         units = params.get("units", "metric")
@@ -162,7 +162,7 @@ class WeatherSSEServer:
 
             result = self._format_current_weather(weather_data, units)
 
-            return types.ToolResult(
+            return types.CallToolResult(
                 content=[
                     types.TextContent(
                         type="text",
@@ -172,7 +172,7 @@ class WeatherSSEServer:
             )
         except requests.exceptions.RequestException as e:
             logger.error(f"Error fetching weather data by coordinates: {str(e)}")
-            return types.ToolResult(
+            return types.CallToolResult(
                 content=[
                     types.TextContent(
                         type="text",
