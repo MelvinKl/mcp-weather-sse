@@ -1,2 +1,2 @@
-mcp>=0.1.0
-requests>=2.25.0
+mcp==1.6.0
+requests==2.32.0
