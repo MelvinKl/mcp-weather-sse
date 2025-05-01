@@ -39,15 +39,8 @@ A Model Context Protocol (MCP) server that connects to the OpenWeatherMap API th
 You can start the server with your OpenWeatherMap API key:
 
 ```bash
-# Using command line argument
-python mcp_weather_sse.py --api-key YOUR_API_KEY
-
-# Using environment variable
-export OPENWEATHER_API_KEY=YOUR_API_KEY
-python mcp_weather_sse.py
-
 # Customize host and port (default: 127.0.0.1:3001)
-python mcp_weather_sse.py --host 0.0.0.0 --port 8080
+python mcp_weather_sse.py --host 0.0.0.0 --port 8080 --api-key YOUR_API_KEY
 ```
 
 ### Connecting with MCP Clients
