@@ -29,7 +29,7 @@ A Model Context Protocol (MCP) server that connects to the OpenWeatherMap API th
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install mcp requests
+   pip install -r requirements.txt
    ```
 
 ## Usage
