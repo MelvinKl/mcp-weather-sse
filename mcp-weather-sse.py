@@ -1,4 +1,5 @@
 import argparse
+from enum import StrEnum
 import os
 from dotenv import load_dotenv
 import sys
@@ -25,19 +26,9 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 3001
 OPENWEATHER_API_BASE_URL = "https://api.openweathermap.org/data/2.5"
 
-class GetCurrentWeatherArgumentsModel(ArgModelBase):
-    city: str
-    units:str
-
-class GetCurrentWeatherForecastArgumentsModel(ArgModelBase):
-    city: str
-    days: int
-    units:str    
-
-class GetCurrentWeatherByCoordinatesArgumentsModel(ArgModelBase):
-    latitude: float
-    longitude: float
-    units:str
+class Unit(StrEnum):
+    Metric = "metric"
+    Imperial = "imperial"
 
 class WeatherSSEServer:
     """MCP Server that connects to OpenWeatherMap API through SSE."""
@@ -72,10 +63,7 @@ class WeatherSSEServer:
             description="Returns the current weather at the given coordinates.",                
         )
 
-    async def _handle_current_weather(self, params: Dict[str, Any]) -> types.CallToolResult:
-        city = params.get("city", "")
-        units = params.get("units", "metric")
-
+    async def _handle_current_weather(self, city:str, units:Unit) -> types.CallToolResult:
         try:
             url = f"{OPENWEATHER_API_BASE_URL}/weather"
             response = requests.get(
@@ -99,7 +87,7 @@ class WeatherSSEServer:
                     )
                 ]
             )
-        except requests.exceptions.RequestExceptions as e:
+        except Exception as e:
             logger.error(f"Error fetching weather data: {str(e)}")
             return types.CallToolResult(
                 content=[
@@ -110,11 +98,7 @@ class WeatherSSEServer:
                 ]
             )
         
-    async def _handle_weather_forecast(self, params: Dict[str, Any]) -> types.CallToolResult:
-        city = params.get("city", "")
-        days = params.get("days", 3)
-        units = params.get("units", "metric")
-
+    async def _handle_weather_forecast(self, city:str,days:int,units:Unit) -> types.CallToolResult:
         try:
             url = f"{OPENWEATHER_API_BASE_URL}/forecast"
             response = requests.get(
@@ -138,7 +122,7 @@ class WeatherSSEServer:
                     )
                 ]
             )
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             logger.error(f"Error fetching forecast data: {str(e)}")
             return types.CallToolResult(
                 content=[
@@ -149,11 +133,7 @@ class WeatherSSEServer:
                 ]
             )
         
-    async def _handle_weather_by_coordinates(self, params: Dict[str, Any]) -> types.CallToolResult:
-        latitude = params.get("latitude", 0.0)
-        longitude = params.get("longitude", 0.0)
-        units = params.get("units", "metric")
-
+    async def _handle_weather_by_coordinates(self, latitude:float,longitude:float,units:Unit) -> types.CallToolResult:
         try: 
             url = f"{OPENWEATHER_API_BASE_URL}/weather"
             response = requests.get(
@@ -178,7 +158,7 @@ class WeatherSSEServer:
                     )
                 ]
             )
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             logger.error(f"Error fetching weather data by coordinates: {str(e)}")
             return types.CallToolResult(
                 content=[
