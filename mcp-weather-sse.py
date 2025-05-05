@@ -41,22 +41,18 @@ class WeatherSSEServer:
 
         self._register_tools()
 
-    def _register_tools(self):
-        self.server.add_tool(            
-                name="get_current_weather",
-                fn=self._handle_current_weather,
-                description="Returns the current weather in the given city.",
-        )        
-        self.server.add_tool(            
-            name="get_current_weather",        
-            fn=self._handle_current_weather,
-            description="Returns the current weather in the given city.",            
-        )
-        self.server.add_tool(         
-            name="get_weather_forecast",                
-            fn=self._handle_weather_forecast,                
-            description="Returns the weather forecast at the given city.",
-        )
+    def _register_tools(self):        
+        # TODO: Endpoint for city does not exist. API only take coordinates. Covnert city to coordinate and then make API call
+        #self.server.add_tool(            
+        #    name="get_current_weather",        
+        #    fn=self._handle_current_weather,
+        #    description="Returns the current weather in the given city.",            
+        #)
+        #self.server.add_tool(         
+        #    name="get_weather_forecast",                
+        #    fn=self._handle_weather_forecast,                
+        #    description="Returns the weather forecast at the given city.",
+        #)
         self.server.add_tool(        
             name="get_weather_by_coordinates",         
             fn=self._handle_weather_by_coordinates,
@@ -160,14 +156,7 @@ class WeatherSSEServer:
             )
         except Exception as e:
             logger.error(f"Error fetching weather data by coordinates: {str(e)}")
-            return types.CallToolResult(
-                content=[
-                    types.TextContent(
-                        type="text",
-                        text=f"Error fetching weather data by coordinates: {str(e)}"
-                    )   
-                ]
-            )
+            raise e
 
     def _format_current_weather(self, data: Dict[str, Any], units: str) -> Dict[str, Any]:
         temp_unit = "°C" if units == "metric" else "°F"
@@ -179,7 +168,8 @@ class WeatherSSEServer:
                     "name": data.get("name", "Unknown"),
                     "country": data.get("sys", {}).get("country", "Unknown"),
                     "cordinates": {
-                        "latitude"
+                        "latitude": data.get("coord", {}).get("lat", 0),
+                        "longitude": data.get("coord", {}).get("lon", 0),
                     }
                 },
                 "current": {
@@ -215,7 +205,7 @@ class WeatherSSEServer:
 
             return weather
 
-        except (KeyError, IndexError) as e:
+        except Exception as e:
             logger.error(f"Error formatting current weather data: {str(e)}")
             return {
                 "error": "Error formatting current weather data",
